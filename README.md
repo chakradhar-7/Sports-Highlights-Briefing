@@ -159,9 +159,9 @@ Sections:
 2. From the project root:
 
 ```bash
-git init
+git init   # omit if `.git/` already exists
 git add .
-git commit -m "Initial commit: T9.4 Sports Highlights Briefing"
+git commit -m "Initial commit: T9.4 Sports Highlights Briefing"   # omit if nothing to commit
 git branch -M main
 git remote add origin https://github.com/<your-username>/<your-repo>.git
 git push -u origin main
