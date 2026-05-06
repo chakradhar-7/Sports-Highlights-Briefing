@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.env
+venv/
+.venv/
+env/
+
+# Large dataset (download separately from Kaggle)
+india-news-headlines.csv
+
+# Cache
+.cache/
+*.cache
+
+# Trained model artefacts (regenerate via src/train.py and src/sbert_baseline.py)
+models/*
+!models/.gitkeep
+
+# LaTeX build noise (keep report.tex / report.pdf)
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / local secrets
+.vscode/
+.idea/
+.streamlit/secrets.toml
+
+# Test files
+test_modules.py
+test_rss.py
