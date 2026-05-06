@@ -8,9 +8,10 @@ A daily sports-news briefing app that pulls live articles from Indian and intern
 
 ## Demo
 
-> **Live app (Streamlit Cloud):** add your deployed URL here after the steps in [Deploy on Streamlit Cloud](#deploy-on-streamlit-community-cloud).
+- **Live app (Streamlit Cloud):** [https://sports-highlight-briefing.streamlit.app/](https://sports-highlight-briefing.streamlit.app/)
+- **Repository (GitHub):** [https://github.com/chakradhar-7/Sports-Highlights-Briefing/tree/main](https://github.com/chakradhar-7/Sports-Highlights-Briefing/tree/main)
 
-> **Repository:** `https://github.com/<your-username>/<your-repo>`
+The sidebar **Max articles to fetch** defaults to **15** (slider up to 80) to reduce load on free hosting.
 
 ---
 
@@ -48,7 +49,7 @@ Smai_A3/
 │   ├── few_shot_gemini.py            # Low-confidence Gemini few-shot rescue (#9)
 │   ├── multilingual.py               # XLM-RoBERTa Hindi/Indic support (#10)
 │   └── live_eval.py                  # Silver-labelled live RSS evaluation set (#8)
-├── models/                           # Created by training scripts (git-ignored)
+├── models/                           # Fine-tuned DistilBERT (**Git LFS**), SBERT+LogReg, metrics
 │   ├── distilbert_sports/            # Fine-tuned model
 │   ├── distilbert_metrics.json
 │   ├── sbert_logreg.joblib
@@ -167,8 +168,25 @@ git remote add origin https://github.com/<your-username>/<your-repo>.git
 git push -u origin main
 ```
 
-**Do not commit** `.env` or `india-news-headlines.csv` (they are listed in `.gitignore`).  
-Trained weights under `models/` are also ignored; others run `python -m src.train` and `python -m src.sbert_baseline` locally or in CI if you add artifacts later.
+Train locally. You can ship weights in **either** way:
+
+- **Git LFS (GitHub):** `models/distilbert_sports/model.safetensors` is ~256 MB → commit with [Git LFS](https://git-lfs.com/). `git push` uploads that blob (slow on home Wi‑Fi).
+
+- **Hugging Face Model Hub (recommended for speed):** Upload the folder `models/distilbert_sports/` to a new *Model* repo, then set **`HF_DISTILBERT_SPORTS = "user/repo"`** in Streamlit (or `.env`). The app loads weights from HF on first run (CDN; no huge git/LFS push).
+
+If you use HF for DistilBERT, you can omit the large file from Git entirely; keep small files (e.g. `sbert_logreg.joblib`) in git if you like.
+
+Clone with LFS (only if weights are in GitHub LFS):
+
+```bash
+git clone https://github.com/chakradhar-7/Sports-Highlights-Briefing.git
+cd Sports-Highlights-Briefing
+git lfs pull
+```
+
+Streamlit Community Cloud can pull LFS objects, or use `HF_DISTILBERT_SPORTS` in Secrets instead.
+
+**Do not commit** `.env` or `india-news-headlines.csv` (they are listed in `.gitignore`).
 
 ---
 
@@ -181,14 +199,18 @@ Trained weights under `models/` are also ignored; others run `python -m src.trai
 
 ```toml
 GEMINI_API_KEY = "your_key_from_aistudio_google_com"
+# Optional — skip Git LFS: load fine-tuned DistilBERT from Hugging Face Hub (public model id)
+HF_DISTILBERT_SPORTS = "your-hf-username/your-model-repo"
+# Only if the HF model repo is private:
+# HF_TOKEN = "hf_..."
 ```
 
 5. **Reboot** the app from the Cloud dashboard so the secret is picked up.
 
 **Notes**
 
-- The app reads `GEMINI_API_KEY` from Streamlit Secrets automatically (see `app.py` after `st.set_page_config`).
-- **Supervised models** (`finetuned-distilbert`, `sbert+logreg`, `ensemble`) appear in the sidebar only if `models/distilbert_sports/` and/or `models/sbert_logreg.joblib` exist. They are not in git; on Cloud the default is the **BART** zero-shot model unless you host weights elsewhere (e.g. Hugging Face Hub) and extend the loader.
+- The app reads `GEMINI_API_KEY` (and optional `HF_DISTILBERT_SPORTS`, `HF_TOKEN`) from Streamlit Secrets (`app.py` after `st.set_page_config`).
+- **Supervised DistilBERT:** either commit **`models/distilbert_sports`** with **Git LFS**, or set **`HF_DISTILBERT_SPORTS`** so weights download from Hugging Face — **much faster than waiting on a 256 MB LFS git push**. **SBERT** head (`sbert_logreg.joblib`, ~40 KB) can stay in plain git.
 - **Memory:** BART-large-MNLI is large. If the app crashes on startup, select **MiniLM** in the sidebar or upgrade to a paid Streamlit workspace.
 - `runtime.txt` pins Python **3.11.9** for reproducible builds.
 
